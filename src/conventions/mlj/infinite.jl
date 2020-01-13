@@ -73,7 +73,8 @@ function coerce(y::Arr{Any}, T::Type{<:Union{Missing,C}};
     if has_chars && verbosity > 0
         @warn "Char value encountered, such value will be coerced according to the corresponding numeric value (e.g. 'A' to $num)."
     end
-    # broadcast the operation
+    # broadcast the operation (note that tight is ignored because the
+    # broadcast automatically implies the tight behaviour)
     c = op.(y)
     # if the container type has  missing but not target, warn
     if (eltype(c) >: Missing) && !(T >: Missing) && verbosity > 0

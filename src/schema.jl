@@ -66,9 +66,15 @@ Inspect the column types and scitypes of a table.
      types = (Int64, Float64),
      scitypes = (Count, Continuous))
 
+## Keywords
+
+* `tight=false`: indicates whether to return the tightest scientific type
+                 possible; this affects cases where the container type is
+                 `Union{Missing,T}` but there are no true missing values in
+                 which case the scitype depends only on `T`.
 """
-schema(X) = schema(X, Val(trait(X)))
-schema(X, ::Val{:other}) =
+schema(X; kw...) = schema(X, Val(trait(X)); kw...)
+schema(X, ::Val{:other}; kw...) =
     throw(ArgumentError("Cannot inspect the internal scitypes of "*
                         "an object with trait `:other`\n"*
                         "Perhaps you meant to import Tables first?"))
@@ -77,11 +83,11 @@ schema(X, ::Val{:other}) =
 
 TRAIT_FUNCTION_GIVEN_NAME[:table] = Tables.istable
 
-function scitype(X, ::Convention, ::Val{:table})
+function scitype(X, ::Convention, ::Val{:table}; kw...)
     Xcol = Tables.columns(X)
     col_names = propertynames(Xcol)
     types = map(col_names) do name
-        scitype(getproperty(Xcol, name))
+        scitype(getproperty(Xcol, name); kw...)
     end
     return Table{Union{types...}}
 end
@@ -96,11 +102,11 @@ function _nrows(X)
     end
 end
 
-function schema(X, ::Val{:table})
+function schema(X, ::Val{:table}; kw...)
     sch      = Tables.schema(X)
     Xcol     = Tables.columntable(X)
     names    = sch.names
     types    = Tuple{sch.types...}
-    scitypes = Tuple{(elscitype(getproperty(Xcol, name)) for name in names)...}
+    scitypes = Tuple{(elscitype(getproperty(Xcol, name); kw...) for name in names)...}
     return Schema(names, types, scitypes, _nrows(X))
 end

@@ -200,17 +200,28 @@ scitype(data) <: Table(Continuous,Count,OrderedFactor)
 
 ### The scientific type of tuples, arrays and tables
 
-Under any convention, the scitype of a tuple is a `Tuple` type parameterized by scientific types:
+Under any convention, the scitype of a tuple is a `Tuple` type parametrised by scientific types:
 
 ```@example 5
 using ScientificTypes # hide
 scitype((1, 4.5))
 ```
 
-Similarly, the scitype of an `AbstractArray` is `AbstractArray{U}` where `U` is the union of the element scitypes:
+The scitype of an AbstractArray, `A`, is always `AbstractArray{U}` where `U` is the union of the element scitypes, with one exception: if `typeof(A) <: AbstractArray{Union{Missing,T}}` for some `T`, then the scitype is `AbstractArray{Union{Missing, U}}`, where `U` is the union over all non-missing elements, _even if A has **no** missing elements_.
+
+This exception is made for performance reasons. If one want's to override it, one uses `scitype(A, tight=true)`:
 
 ```@example 5
-scitype([1.3, 4.5, missing])
+v = [1.3, 4.5, missing]
+scitype(v)
+```
+
+```@example 5
+scitype(v[1:2])
+```
+
+```@example 5
+scitype(v[1:2], tight=true)
 ```
 
 *Performance note:* Computing type unions over large arrays is
